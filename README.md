@@ -1,2 +1,35 @@
-# churn-risk-assistant
-Predicts which customers are likely to churn using Python machine learning, then uses generative AI to write next-step recommendations for account managers.
+# Customer Churn Risk Assistant
+
+Predicts which telecom customers are likely to cancel, then uses generative AI to write a short retention plan for each at-risk customer so an account manager knows who to call and what to offer.
+
+## The Problem
+About 26.5% of customers in this dataset left. Retention teams can't call everyone, so they need to know which customers are most at risk, why, and what to offer them.
+
+## Data
+IBM's public Telco Customer Churn sample dataset (7,043 customers, 21 columns) from Kaggle. The same approach would apply to live CRM data, such as Salesforce account and opportunity records.
+
+## What I Did
+1. **Cleaned the data.** TotalCharges was stored as text because 11 customers had blank values. All 11 had zero months of tenure (they hadn't been billed yet), so I filled them with $0, their true value, instead of an average.
+2. **Compared two models.** Logistic regression outperformed a random forest (AUC 0.84 vs. 0.83), and it's easier to explain to business users.
+3. **Tuned for the business goal.** I balanced the model to catch more churners, raising recall from 56% to 79%. That creates more false alarms, but a check-in call costs far less than losing a customer.
+4. **Identified churn drivers.** Fiber internet and electronic check payments raise risk the most. One- and two-year contracts, online security, and tech support lower it. These are patterns, not proof of cause.
+5. **Generated AI retention notes.** For the 10 highest-risk customers, Gemini writes why they're at risk, an offer, and an opening line for the call.
+
+## Making the AI Reliable
+- **No made-up offers:** the first version invented discounts that didn't exist, so I limited the AI to a fixed list of approved offers.
+- **Structured output:** the AI returns JSON, so the notes go straight into a table.
+- **Efficient:** all 10 customers go in one request instead of 10, which keeps the project within the free tier.
+- **Fault-tolerant:** a time limit and automatic retries handle outages, and the notes are saved so re-running doesn't call the AI again.
+
+## Results
+| Model | Recall (churners caught) | Precision | AUC |
+|---|---|---|---|
+| Logistic regression | 0.56 | 0.66 | 0.842 |
+| Random forest | 0.52 | 0.64 | 0.827 |
+| **Balanced logistic regression** | **0.79** | 0.51 | 0.842 |
+
+## Tools
+Python, pandas, scikit-learn, Google Gemini API, Google Colab
+
+## Run It Yourself
+Open `churn_analysis.ipynb` in Google Colab and upload the dataset when prompted. To run the AI step, add a free Gemini API key in Colab Secrets as `GEMINI_API_KEY`.
